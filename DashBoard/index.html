@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obesity Analytics Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="js/utils.js" defer></script>
+    <script src="js/data-loader.js" defer></script>
+    <script src="js/charts.js" defer></script>
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Obesity Analytics Dashboard</h1>
+            <p class="dashboard-description">
+                Advanced visualization and analysis of obesity-related health factors
+            </p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- File Upload -->
+        <div class="card fade-in">
+            <div class="card-title">
+                <i class="fas fa-cloud-upload-alt icon"></i>
+                <h2>Data Source</h2>
+            </div>
+            <div class="file-upload">
+                <label for="csv-file">Upload Dataset (CSV)</label>
+                <div class="upload-area" id="upload-area">
+                    <i class="fas fa-file-csv" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <p>Drag & drop your CSV file here or click to browse</p>
+                    <input type="file" id="csv-file" accept=".csv" style="display: none;">
+                    <button class="btn btn-primary" onclick="document.getElementById('csv-file').click()">
+                        <i class="fas fa-folder-open" style="margin-right: 8px;"></i> Browse Files
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="card fade-in" style="animation-delay: 0.1s;">
+            <div class="card-title">
+                <i class="fas fa-sliders-h icon"></i>
+                <h2>Data Filters</h2>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="age-range"><i class="fas fa-user-clock" style="margin-right: 8px;"></i>Age Range</label>
+                    <input type="range" id="age-range" min="15" max="70" step="1" value="70">
+                    <div id="age-value" style="margin-top: 8px; font-weight: 500;">15 - 70</div>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="gender"><i class="fas fa-venus-mars" style="margin-right: 8px;"></i>Gender</label>
+                    <select id="gender">
+                        <option value="all">All Genders</option>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="obesity-level"><i class="fas fa-weight" style="margin-right: 8px;"></i>Obesity Level</label>
+                    <select id="obesity-level">
+                        <option value="all">All Levels</option>
+                        <option value="Insufficient_Weight">Insufficient Weight</option>
+                        <option value="Normal_Weight">Normal Weight</option>
+                        <option value="Overweight_Level_I">Overweight Level I</option>
+                        <option value="Overweight_Level_II">Overweight Level II</option>
+                        <option value="Obesity_Type_I">Obesity Type I</option>
+                        <option value="Obesity_Type_II">Obesity Type II</option>
+                        <option value="Obesity_Type_III">Obesity Type III</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="family-history"><i class="fas fa-family" style="margin-right: 8px;"></i>Family History</label>
+                    <select id="family-history">
+                        <option value="all">All</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        
+        <!-- Summary Stats -->
+        <div class="card fade-in" style="animation-delay: 0.3s;">
+            <div class="card-title">
+                <i class="fas fa-chart-bar icon"></i>
+                <h2>Key Statistics</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Records</div>
+                    <div class="stat-value" id="total-records">0</div>
+                    <i class="fas fa-database" style="color: var(--info-color); font-size: 1.5rem;"></i>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Age</div>
+                    <div class="stat-value" id="avg-age">0</div>
+                    <i class="fas fa-user-clock" style="color: var(--info-color); font-size: 1.5rem;"></i>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average BMI</div>
+                    <div class="stat-value" id="avg-bmi">0</div>
+                    <i class="fas fa-weight" style="color: var(--info-color); font-size: 1.5rem;"></i>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Female Percentage</div>
+                    <div class="stat-value" id="female-pct">0%</div>
+                    <i class="fas fa-venus" style="color: var(--info-color); font-size: 1.5rem;"></i>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Family History</div>
+                    <div class="stat-value" id="family-history-pct">0%</div>
+                    <i class="fas fa-family" style="color: var(--info-color); font-size: 1.5rem;"></i>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">High Caloric Food</div>
+                    <div class="stat-value" id="high-caloric-pct">0%</div>
+                    <i class="fas fa-utensils" style="color: var(--info-color); font-size: 1.5rem;"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Visualization Controls -->
+        <div class="card fade-in" style="animation-delay: 0.2s;">
+            <div class="card-title">
+                <i class="fas fa-chart-line icon"></i>
+                <h2>Visualization Options</h2>
+            </div>
+            <div class="visualization-options">
+                <div class="visualization-type">
+                    <label for="primary-chart"><i class="fas fa-chart-pie" style="margin-right: 8px;"></i>Chart Type</label>
+                    <select id="primary-chart">
+                        <option value="bmi-distribution">BMI Distribution</option>
+                        <option value="scatter-plot">Scatter Plot</option>
+                        <option value="bar-chart">Bar Chart</option>
+                        <option value="pie-chart">Pie Chart</option>
+                        <option value="box-plot">Box Plot</option>
+                        <option value="histogram">Histogram</option>
+                    </select>
+                </div>
+                
+                <div class="visualization-type">
+                    <label for="x-axis"><i class="fas fa-xmark" style="margin-right: 8px;"></i>X-Axis</label>
+                    <select id="x-axis">
+                        <option value="Age">Age</option>
+                        <option value="Height">Height</option>
+                        <option value="Weight">Weight</option>
+                        <option value="BMI">BMI</option>
+                        <option value="physical_activity">Physical Activity</option>
+                    </select>
+                </div>
+                
+                <div class="visualization-type">
+                    <label for="y-axis"><i class="fas fa-ymark" style="margin-right: 8px;"></i>Y-Axis</label>
+                    <select id="y-axis">
+                        <option value="Weight">Weight</option>
+                        <option value="BMI">BMI</option>
+                        <option value="Age">Age</option>
+                        <option value="physical_activity">Physical Activity</option>
+                        <option value="use_vegetables">Vegetable Consumption</option>
+                    </select>
+                </div>
+                
+                <div class="visualization-type">
+                    <label for="color-by"><i class="fas fa-palette" style="margin-right: 8px;"></i>Color By</label>
+                    <select id="color-by">
+                        <option value="obesity_level">Obesity Level</option>
+                        <option value="Gender">Gender</option>
+                        <option value="family_history_with_overweight">Family History</option>
+                        <option value="high_caloric_food">High Caloric Food</option>
+                    </select>
+                </div>
+            </div>
+            <button id="update-visualizations" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">
+                <i class="fas fa-sync-alt" style="margin-right: 8px;"></i> Update Visualizations
+            </button>
+        </div>
+        
+        <!-- Visualizations -->
+        <div class="grid-2-col fade-in" style="animation-delay: 0.4s;">
+            <div class="chart-container card">
+                <div class="card-title">
+                    <i class="fas fa-chart-area icon"></i>
+                    <h2 id="primary-chart-title">Primary Visualization</h2>
+                </div>
+                <div id="primary-visualization" class="chart"></div>
+            </div>
+            
+            <div class="chart-container card">
+                <div class="card-title">
+                    <i class="fas fa-chart-pie icon"></i>
+                    <h2>Obesity Level Distribution</h2>
+                </div>
+                <div id="obesity-distribution" class="chart"></div>
+            </div>
+        </div>
+        
+        <!-- Correlation Matrix -->
+        <div class="card fade-in" style="animation-delay: 0.5s;">
+            <div class="card-title">
+                <i class="fas fa-project-diagram icon"></i>
+                <h2>Correlation Matrix</h2>
+            </div>
+            <div class="correlation-matrix">
+                <div id="correlation-matrix" class="chart" style="height: 500px;"></div>
+            </div>
+        </div>
+        
+        <!-- Detailed Stats -->
+        <div class="card fade-in" style="animation-delay: 0.6s;">
+            <div class="card-title">
+                <i class="fas fa-table icon"></i>
+                <h2>Detailed Statistics</h2>
+            </div>
+            <div id="detailed-stats" class="detailed-stats-container">
+                <p>Upload a dataset to view detailed statistics.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
